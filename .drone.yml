@@ -11,6 +11,7 @@ steps:
 - name: compile
   image: dereference23/kernel_arm64:clang
   commands:
+  - git submodule update --init --recursive
   - make cust_defconfig O=out CC=clang
   - make -j$(nproc --all) O=out CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
   - export ZIPNAME=kernel-$(date +%Y%m%d).zip
