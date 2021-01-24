@@ -208,7 +208,6 @@ static int dbg_check_name(const struct ubifs_info *c,
 	return 0;
 }
 
-static void ubifs_set_d_ops(struct inode *dir, struct dentry *dentry);
 static struct dentry *ubifs_lookup(struct inode *dir, struct dentry *dentry,
 				   unsigned int flags)
 {
@@ -222,7 +221,7 @@ static struct dentry *ubifs_lookup(struct inode *dir, struct dentry *dentry,
 	dbg_gen("'%pd' in dir ino %lu", dentry, dir->i_ino);
 
 	err = fscrypt_prepare_lookup(dir, dentry, &nm);
-	ubifs_set_d_ops(dir, dentry);
+	generic_set_encrypted_ci_d_ops(dentry);
 	if (err == -ENOENT)
 		return d_splice_alias(NULL, dentry);
 	if (err)
@@ -1136,7 +1135,8 @@ static int ubifs_symlink(struct inode *dir, struct dentry *dentry,
 	struct ubifs_inode *ui;
 	struct ubifs_inode *dir_ui = ubifs_inode(dir);
 	struct ubifs_info *c = dir->i_sb->s_fs_info;
-	int err, sz_change, len = strlen(symname);
+	int err, len = strlen(symname);
+	int sz_change = CALC_DENT_SIZE(len);
 	struct fscrypt_str disk_link;
 	struct ubifs_budget_req req = { .new_ino = 1, .new_dent = 1,
 					.new_ino_d = ALIGN(len, 8),
@@ -1162,8 +1162,6 @@ static int ubifs_symlink(struct inode *dir, struct dentry *dentry,
 	err = fscrypt_setup_filename(dir, &dentry->d_name, 0, &nm);
 	if (err)
 		goto out_budg;
-
-	sz_change = CALC_DENT_SIZE(fname_len(&nm));
 
 	inode = ubifs_new_inode(c, dir, S_IFLNK | S_IRWXUGO);
 	if (IS_ERR(inode)) {
@@ -1209,10 +1207,11 @@ static int ubifs_symlink(struct inode *dir, struct dentry *dentry,
 		goto out_cancel;
 	mutex_unlock(&dir_ui->ui_mutex);
 
+	ubifs_release_budget(c, &req);
 	insert_inode_hash(inode);
 	d_instantiate(dentry, inode);
-	err = 0;
-	goto out_fname;
+	fscrypt_free_filename(&nm);
+	return 0;
 
 out_cancel:
 	dir->i_size -= sz_change;
@@ -1686,19 +1685,3 @@ const struct file_operations ubifs_dir_operations = {
 	.compat_ioctl   = ubifs_compat_ioctl,
 #endif
 };
-
-#ifdef CONFIG_FS_ENCRYPTION
-static const struct dentry_operations ubifs_encrypted_dentry_ops = {
-	.d_revalidate = fscrypt_d_revalidate,
-};
-#endif
-
-static void ubifs_set_d_ops(struct inode *dir, struct dentry *dentry)
-{
-#ifdef CONFIG_FS_ENCRYPTION
-	if (dentry->d_flags & DCACHE_ENCRYPTED_NAME) {
-		d_set_d_op(dentry, &ubifs_encrypted_dentry_ops);
-		return;
-	}
-#endif
-}
