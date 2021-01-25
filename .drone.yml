@@ -14,7 +14,7 @@ steps:
   - git submodule update --init --recursive
   - make cust_defconfig O=out CC=clang
   - make -j$(nproc --all) O=out CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
-  - export ZIPNAME=kernel-$(date +%Y%m%d).zip
+  - export ZIPNAME=kernel-$(git log --pretty=format:'%h' -n 1).zip
   - git clone https://github.com/ctwoon/AnyKernel3-2.git --depth=1 AnyKernel3
   - cp out/arch/arm64/boot/Image.gz AnyKernel3
   - cp out/arch/arm64/boot/dtbo.img AnyKernel3
