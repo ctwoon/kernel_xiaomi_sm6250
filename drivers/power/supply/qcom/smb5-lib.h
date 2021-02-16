@@ -119,8 +119,6 @@ enum print_reason {
 #define MAX_PLUSE_COUNT_ALLOWED		23
 #define HIGH_NUM_PULSE_THR		12
 
-/* thermal micros */
-#define MAX_TEMP_LEVEL		16
 /* percent of ICL compared to base 5V for different PD voltage_min voltage */
 #define PD_6P5V_PERCENT		85
 #define PD_7P5V_PERCENT		75
@@ -638,15 +636,6 @@ struct smb_charger {
 	int			boost_threshold_ua;
 	int			system_temp_level;
 	int			thermal_levels;
-	int 		*thermal_mitigation_dcp;
-	int 		*thermal_mitigation_qc2;
-	int 		*thermal_mitigation_pd_base;
-	int 		*thermal_mitigation_icl;
-	int 		*thermal_fcc_qc3_normal;
-	int 		*thermal_fcc_qc3_cp;
-	int 		*thermal_fcc_qc3_classb_cp;
-	int 		*thermal_fcc_qc3p5_cp;
-	int 		*thermal_fcc_pps_cp;
 	int			*thermal_mitigation;
 	int			*thermal_mitigation_cp;
 	int			dcp_icl_ua;
