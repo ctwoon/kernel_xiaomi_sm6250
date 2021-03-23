@@ -502,7 +502,7 @@ static void msm_drm_pm_unreq(struct work_struct *work)
 
 	pm_qos_update_request(&priv->pm_irq_req, PM_QOS_DEFAULT_VALUE);
 	atomic_set_release(&priv->pm_req_set, 0);
-
+}
 static ssize_t idle_encoder_mask_store(struct device *device,
 			       struct device_attribute *attr,
 			       const char *buf, size_t count)

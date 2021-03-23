@@ -1,0 +1,25 @@
+container:
+  image: dereference23/kernel_arm64:gcc
+  cpu: 16
+  memory: 8G
+  use_in_memory_disk: true
+task:
+  env:
+    CIRRUS_CLONE_DEPTH: 1
+    BOT_API_TOKEN: ENCRYPTED[f5d78cde98dd8533eb8f2c3b0364969a259678c61d20a66ecbf5c32c374c5535fcd8ca2d185f8b4f3f9fa4a7809d046d]
+  ccache_cache:
+    folder: $HOME/.ccache
+  compile_script:
+    - git submodule update --init --recursive
+    - export KBUILD_BUILD_USER=ctwoon
+    - make cust_defconfig O=out
+    - make -j$(nproc --all) O=out CC="ccache ${CROSS_COMPILE}gcc"
+  upload_script:
+    - export ZIPNAME=kernel-$(git log --pretty=format:'%h' -n 1).zip
+    - git clone https://github.com/ctwoon/AnyKernel3-2.git --depth=1 AnyKernel3
+    - cp out/arch/arm64/boot/Image.gz AnyKernel3
+    - cp out/arch/arm64/boot/dtbo.img AnyKernel3
+    - cp out/arch/arm64/boot/dts/qcom/cust-atoll-ab.dtb AnyKernel3/dtb
+    - cd AnyKernel3
+    - zip -r9 $ZIPNAME * -x .git README.md *placeholder
+    - curl -F chat_id=-441127631 -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_API_TOKEN/sendDocument
