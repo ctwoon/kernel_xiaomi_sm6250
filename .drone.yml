@@ -1,0 +1,33 @@
+kind: pipeline
+name: default
+
+workspace:
+  path: /drone/src
+
+clone:
+  depth: 1
+
+steps:
+- name: compile
+  image: dereference23/kernel_arm64:clang
+  commands:
+  - git submodule update --init --recursive
+  - make cust_defconfig O=out CC=clang
+  - make -j$(nproc --all) O=out CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+  - export ZIPNAME=kernel-$(git log --pretty=format:'%h' -n 1).zip
+  - git clone https://github.com/ctwoon/AnyKernel3-2.git --depth=1 AnyKernel3
+  - cp out/arch/arm64/boot/Image.gz AnyKernel3
+  - cp out/arch/arm64/boot/dtbo.img AnyKernel3
+  - cp out/arch/arm64/boot/dts/qcom/cust-atoll-ab.dtb AnyKernel3/dtb
+  - cd AnyKernel3
+  - zip -r9 $ZIPNAME * -x .git README.md *placeholder
+  - curl -F chat_id="-441127631" -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_API_TOKEN/sendDocument
+  environment:
+    BOT_API_TOKEN:
+      from_secret: botapitoken
+  
+trigger:
+  branch:
+  - Rika
+  event:
+  - push
