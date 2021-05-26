@@ -21,7 +21,7 @@ steps:
   - cp out/arch/arm64/boot/dts/qcom/cust-atoll-ab.dtb AnyKernel3/dtb
   - cd AnyKernel3
   - zip -r9 $ZIPNAME * -x .git README.md *placeholder
-  - curl -F chat_id="-441127631" -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_API_TOKEN/sendDocument
+  - curl -F chat_id="-1001279703149" -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_API_TOKEN/sendDocument
   environment:
     BOT_API_TOKEN:
       from_secret: botapitoken
