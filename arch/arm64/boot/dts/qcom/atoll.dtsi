@@ -614,24 +614,12 @@
 			label = "dfps_data_region";
 		};
 
-		disp_rdump_memory: disp_rdump_region@9c000000 {
-			reg = <0x0 0x9c000000 0x0 0x01700000>;
-			label = "disp_rdump_region";
-		};
-
 		adsp_mem: adsp_region {
 			compatible = "shared-dma-pool";
 			alloc-ranges = <0x0 0x00000000 0x0 0xffffffff>;
 			reusable;
 			alignment = <0x0 0x400000>;
 			size = <0x0 0x800000>;
-		};
-
-		dump_mem: mem_dump_region {
-			compatible = "shared-dma-pool";
-			alloc-ranges = <0x0 0x00000000 0x0 0xffffffff>;
-			reusable;
-			size = <0 0x2400000>;
 		};
 
 		/* global autoconfigured region for contiguous allocations */
@@ -646,7 +634,7 @@
 	};
 
 	chosen {
-		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7";
+		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7 noirqdebug";
 	};
 
 	soc: soc { };
@@ -1931,61 +1919,6 @@
 		};
 	};
 
-	mem_dump {
-		compatible = "qcom,mem-dump";
-		memory-region = <&dump_mem>;
-
-		rpmh {
-			qcom,dump-size = <0x2000000>;
-			qcom,dump-id = <0xec>;
-		};
-
-		rpm_sw {
-			qcom,dump-size = <0x28000>;
-			qcom,dump-id = <0xea>;
-		};
-
-		pmic {
-			qcom,dump-size = <0x80000>;
-			qcom,dump-id = <0xe4>;
-		};
-
-		fcm {
-			qcom,dump-size = <0x8400>;
-			qcom,dump-id = <0xee>;
-		};
-
-		etf_swao {
-			qcom,dump-size = <0x10000>;
-			qcom,dump-id = <0xf1>;
-		};
-
-		etr_reg {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0x100>;
-		};
-
-		etfswao_reg {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0x102>;
-		};
-
-		misc_data {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0xe8>;
-		};
-
-		etf_lpass {
-			qcom,dump-size = <0x4000>;
-			qcom,dump-id = <0xf4>;
-		};
-
-		etflpass_reg {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0x104>;
-		};
-	};
-
 	clocks {
 		sleep_clk: sleep-clk {
 			compatible = "fixed-clock";
@@ -2258,7 +2191,7 @@
 
 				msm_cdsp_rm: qcom,msm_cdsp_rm {
 					compatible = "qcom,msm-cdsp-rm";
-					qcom,qos-latency-us = <44>;
+					qcom,qos-latency-us = <67>;
 					qcom,qos-maxhold-ms = <20>;
 					qcom,compute-cx-limit-en;
 					qcom,compute-priority-mode = <2>;

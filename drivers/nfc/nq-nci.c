@@ -560,7 +560,7 @@ int nfc_ioctl_power_states(struct file *filp, unsigned long arg)
 	int r = 0;
 	struct nqx_dev *nqx_dev = filp->private_data;
 
-	if (arg == 0) {
+	if (arg == 0 || arg == 8) {
 		/*
 		 * We are attempting a hardware reset so let us disable
 		 * interrupts to avoid spurious notifications to upper
@@ -595,7 +595,7 @@ int nfc_ioctl_power_states(struct file *filp, unsigned long arg)
 				dev_err(&nqx_dev->client->dev, "unable to disable clock\n");
 		}
 		nqx_dev->nfc_ven_enabled = false;
-	} else if (arg == 1) {
+	} else if (arg == 1 || arg == 7) {
 		nqx_enable_irq(nqx_dev);
 		dev_dbg(&nqx_dev->client->dev,
 			"gpio_set_value enable: %s: info: %p\n",
@@ -1615,11 +1615,60 @@ static int nfcc_reboot(struct notifier_block *notifier, unsigned long val,
 	return NOTIFY_OK;
 }
 
+#define LC_NFC_CHECK
+
+#ifdef LC_NFC_CHECK
+
+#include <linux/board_id.h>
+
+static int lct_check_hwversion()
+{
+	int ret = 0;
+	int project_number = 0;
+	int major_number = 0;
+
+	//get hwversion number
+	project_number = board_id_get_hwversion_product_num();
+	major_number = board_id_get_hwversion_major_num();
+
+	//check project
+	switch(project_number) {
+	case 1: //curtana
+		if (major_number%10 == 3) // if (CN version)
+			ret = 0;
+		else
+			ret = -1;
+		break;
+	case 2: //excalibur
+		ret = -1;
+		break;
+	case 3: //durandal
+		ret = 0;
+		break;
+	case 4: //joyeuse
+		ret = 0;
+		break;
+	default:
+		ret = -1;
+		break;
+	}
+
+	return ret;
+}
+#endif //LC_NFC_CHECK
+
 /*
  * module load/unload record keeping
  */
 static int __init nqx_dev_init(void)
 {
+#ifdef LC_NFC_CHECK
+	if (lct_check_hwversion()) {
+		pr_err("[nq-nci] NFC not supported on the board!\n");
+		return -ENODEV;
+	}
+	pr_info("[nq-nci] the board supports NFC\n");
+#endif //LC_NFC_CHECK
 	return i2c_add_driver(&nqx);
 }
 module_init(nqx_dev_init);

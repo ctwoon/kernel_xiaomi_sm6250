@@ -1,0 +1,47 @@
+/*
+ * TouchScreen Device Tree
+ */
+&qupv3_se11_spi {
+	status = "ok";
+
+	touchscreen {
+		status = "ok";
+		compatible = "focaltech,fts", "novatek,NVT-ts-spi";
+		reg = <0>;
+
+		/* SPI configuration */
+		spi-max-frequency = <8000000>;
+
+		/* Regulator configuration */
+		touch_vddio-supply = <&L18A>;
+		touch_lab-supply = <&lcdb_ldo_vreg>;
+		touch_ibb-supply = <&lcdb_ncp_vreg>;
+
+		/* Interrupt configuration */
+		interrupt-parent = <&tlmm>;
+		interrupts = <13 0x02>;
+
+		/*
+		 * FT8756
+		 */
+
+		/* Focaltech GPIO configuration */
+		focaltech,reset-gpio = <&tlmm 8 0x01>;
+		focaltech,irq-gpio = <&tlmm 9 0x02>;
+
+		focaltech,max-touch-number = <10>;
+		focaltech,display-coords = <0 0 1080 2400>;
+
+		/*
+		 * NT36675
+		 */
+
+		/* Novatek GPIO configuration */
+		novatek,reset-gpio = <&tlmm 8 0x00>;
+		novatek,irq-gpio = <&tlmm 9 0x2001>;
+
+		/* 672A, 525B, 675, 526 */
+		novatek,swrst-n8-addr = <0x03F0FE>;
+		novatek,spi-rd-fast-addr = <0x03F310>;
+	};
+};

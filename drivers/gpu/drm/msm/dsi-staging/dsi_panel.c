@@ -44,6 +44,9 @@
 #define DEFAULT_PANEL_PREFILL_LINES	25
 #define TICKS_IN_MICRO_SECOND		1000000
 
+static bool lcd_esd_irq_handler = false;
+extern void lcd_esd_enable(bool en);
+
 enum dsi_dsc_ratio_type {
 	DSC_8BPC_8BPP,
 	DSC_10BPC_8BPP,
@@ -471,6 +474,13 @@ exit:
 	return rc;
 }
 
+static bool lcd_reset_keep_high = false;
+void set_lcd_reset_gpio_keep_high(bool en)
+{
+	lcd_reset_keep_high = en;
+}
+EXPORT_SYMBOL(set_lcd_reset_gpio_keep_high);
+
 static int dsi_panel_power_off(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -478,8 +488,14 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
 		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
 
-	if (gpio_is_valid(panel->reset_config.reset_gpio))
-		gpio_set_value(panel->reset_config.reset_gpio, 0);
+	if (gpio_is_valid(panel->reset_config.reset_gpio)) {
+		if (lcd_reset_keep_high) {
+			pr_warn("%s: lcd-reset-gpio keep high\n", __func__);
+		} else {
+			pr_err("%s: lcd-reset_gpio disable\n", __func__);
+			gpio_set_value(panel->reset_config.reset_gpio, 0);
+		}
+	}
 
 	if (gpio_is_valid(panel->reset_config.lcd_mode_sel_gpio))
 		gpio_set_value(panel->reset_config.lcd_mode_sel_gpio, 0);
@@ -493,6 +509,9 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 	rc = dsi_pwr_enable_regulator(&panel->power_info, false);
 	if (rc)
 		pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
+
+	if (panel->special_panel == DSI_SPECIAL_PANEL_TIANMA)
+		mdelay(5);
 
 	return rc;
 }
@@ -3189,6 +3208,19 @@ static int dsi_panel_parse_esd_config(struct dsi_panel *panel)
 
 	esd_config = &panel->esd_config;
 	esd_config->status_mode = ESD_MODE_MAX;
+
+	esd_config->esd_err_irq_gpio = of_get_named_gpio(panel->panel_of_node,
+			"qcom,esd-err-int-gpio", 0);
+	esd_config->esd_err_irq_flags =  IRQF_TRIGGER_FALLING | IRQF_ONESHOT;
+	if (gpio_is_valid(esd_config->esd_err_irq_gpio)) {
+		esd_config->esd_err_irq = gpio_to_irq(esd_config->esd_err_irq_gpio);
+		rc = gpio_request(esd_config->esd_err_irq_gpio, "esd_err_int_gpio");
+		if (!rc)
+			gpio_direction_input(esd_config->esd_err_irq_gpio);
+
+		return 0;
+	}
+
 	esd_config->esd_enabled = utils->read_bool(utils->data,
 		"qcom,esd-check-enabled");
 
@@ -3286,10 +3318,15 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 	dsi_panel_update_util(panel, parser_node);
 	utils = &panel->utils;
 
+	panel->special_panel = DSI_SPECIAL_PANEL_NONE;
 	panel->name = utils->get_property(utils->data,
 				"qcom,mdss-dsi-panel-name", NULL);
 	if (!panel->name)
 		panel->name = DSI_PANEL_DEFAULT_LABEL;
+	else if ((strnstr(panel->name, "tianma", strlen(panel->name))))
+		panel->special_panel = DSI_SPECIAL_PANEL_TIANMA;
+	else if ((strnstr(panel->name, "huaxing", strlen(panel->name))))
+		panel->special_panel = DSI_SPECIAL_PANEL_HUAXING;
 
 	/*
 	 * Set panel type to LCD as default.
@@ -3415,6 +3452,7 @@ int dsi_panel_drv_init(struct dsi_panel *panel,
 	 */
 	dev->channel = 0;
 	dev->lanes = 4;
+	lcd_esd_irq_handler = false;
 
 	panel->host = host;
 	rc = dsi_panel_vreg_get(panel);
@@ -4246,6 +4284,12 @@ int dsi_panel_post_switch(struct dsi_panel *panel)
 	return rc;
 }
 
+void lcd_esd_handler(bool en)
+{
+	lcd_esd_irq_handler = en;
+}
+EXPORT_SYMBOL(lcd_esd_handler);
+
 int dsi_panel_enable(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -4264,6 +4308,15 @@ int dsi_panel_enable(struct dsi_panel *panel)
 	else
 		panel->panel_initialized = true;
 	mutex_unlock(&panel->panel_lock);
+
+	if (lcd_esd_irq_handler) {
+		enable_irq(panel->esd_config.esd_err_irq);
+		lcd_esd_irq_handler = false;
+	}
+
+	if (panel->special_panel == DSI_SPECIAL_PANEL_TIANMA)
+		lcd_esd_enable(true);
+
 	return rc;
 }
 
@@ -4334,6 +4387,9 @@ int dsi_panel_disable(struct dsi_panel *panel)
 		       panel->power_mode == SDE_MODE_DPMS_LP2))
 			dsi_pwr_panel_regulator_mode_set(&panel->power_info,
 				"ibb", REGULATOR_MODE_STANDBY);
+
+		if (panel->special_panel == DSI_SPECIAL_PANEL_TIANMA)
+			lcd_esd_enable(false);
 
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_OFF);
 		if (rc) {

@@ -617,14 +617,8 @@ static int __cam_isp_ctx_handle_buf_done_in_activated_state(
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = done->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((done->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at buf_done",
-			ctx, req->request_id,
-			ctx_isp->substate_activated,
-			(done->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = done->irq_mono_boot_time;
 
@@ -874,16 +868,8 @@ static int __cam_isp_ctx_reg_upd_in_epoch_state(
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((rup_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-
-		if (req)
-			trace_cam_isp_irq_delay_detect("IRQ delay at reg_upd",
-				ctx, req->request_id,
-				ctx_isp->substate_activated,
-				(rup_event_data->irq_mono_boot_time -
-				ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 	return 0;
@@ -937,14 +923,8 @@ static int __cam_isp_ctx_reg_upd_in_activated_state(
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((rup_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at reg_upd",
-			ctx, req->request_id,
-			ctx_isp->substate_activated,
-			(rup_event_data->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 end:
@@ -1118,14 +1098,8 @@ static int __cam_isp_ctx_sof_in_activated_state(
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = sof_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((sof_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at sof",
-			ctx, req->request_id,
-			ctx_isp->substate_activated,
-			(sof_event_data->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = sof_event_data->irq_mono_boot_time;
 
@@ -1171,14 +1145,8 @@ static int __cam_isp_ctx_reg_upd_in_sof(struct cam_isp_context *ctx_isp,
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((rup_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at reg_upd",
-			ctx, req->request_id,
-			ctx_isp->substate_activated,
-			(rup_event_data->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
 end:
@@ -1188,7 +1156,7 @@ end:
 static int __cam_isp_ctx_epoch_in_applied(struct cam_isp_context *ctx_isp,
 	void *evt_data)
 {
-	struct cam_ctx_request    *req = NULL;
+	struct cam_ctx_request    *req;
 	struct cam_isp_ctx_req    *req_isp = NULL;
 	struct cam_context        *ctx = ctx_isp->base;
 	uint64_t  request_id = 0;
@@ -1267,14 +1235,8 @@ end:
 		ctx_isp->irq_timestamps =
 			epoch_hw_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((epoch_hw_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at epoch",
-			ctx, req->request_id,
-			ctx_isp->substate_activated,
-			(epoch_hw_event_data->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = epoch_hw_event_data->irq_mono_boot_time;
 
@@ -1313,14 +1275,8 @@ static int __cam_isp_ctx_sof_in_epoch(struct cam_isp_context *ctx_isp,
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = sof_event_data->irq_mono_boot_time;
 	else if (ctx_isp->fps && ((sof_event_data->irq_mono_boot_time -
-		ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps))) {
+			ctx_isp->irq_timestamps) > ((1000*1000)/ctx_isp->fps)))
 		ctx_isp->irq_delay_detect = true;
-		trace_cam_isp_irq_delay_detect("IRQ delay at sof",
-			ctx, 0,
-			ctx_isp->substate_activated,
-			(sof_event_data->irq_mono_boot_time -
-			ctx_isp->irq_timestamps));
-	}
 
 	ctx_isp->irq_timestamps = sof_event_data->irq_mono_boot_time;
 
@@ -2300,7 +2256,7 @@ static int __cam_isp_ctx_dump_in_top_state(struct cam_context *ctx,
 	struct timeval cur_time;
 	int rc = 0;
 	uintptr_t cpu_addr;
-	size_t buf_len = 0;
+	size_t buf_len;
 	struct cam_isp_context_dump_header *hdr;
 	uint64_t *addr, *start;
 	uint8_t *dst;
@@ -2479,7 +2435,6 @@ static int __cam_isp_ctx_flush_req_in_top_state(
 	struct cam_hw_stop_args           stop_args;
 	struct cam_isp_start_args         start_isp;
 	struct cam_hw_reset_args          reset_args;
-
 	if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_ALL) {
 		CAM_INFO(CAM_ISP, "ctx id:%d Last request id to flush is %lld",
 			ctx->ctx_id, flush_req->req_id);

@@ -166,10 +166,21 @@ struct drm_panel_esd_config {
 	u8 *return_buf;
 	u8 *status_buf;
 	u32 groups;
+
+	int esd_err_irq_gpio;
+	int esd_err_irq;
+	int esd_err_irq_flags;
+};
+
+enum dsi_special_panel {
+	DSI_SPECIAL_PANEL_NONE,
+	DSI_SPECIAL_PANEL_TIANMA,
+	DSI_SPECIAL_PANEL_HUAXING,
 };
 
 struct dsi_panel {
 	const char *name;
+	enum dsi_special_panel special_panel;
 	const char *type;
 	struct device_node *panel_of_node;
 	struct mipi_dsi_device mipi_device;
