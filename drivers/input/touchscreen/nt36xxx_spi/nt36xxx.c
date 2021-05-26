@@ -70,7 +70,6 @@ DECLARE_WORK(nvt_usb_plugin_work, nvt_ts_usb_plugin_work_func);
 extern touchscreen_usb_plugin_data_t g_touchscreen_usb_pulgin;
 #endif
 
-struct nvt_ts_data *ts;
 static struct device *spi_geni_master_dev;
 
 #if BOOT_UPDATE_FIRMWARE
